@@ -1,0 +1,27 @@
+val spark = org.apache.spark.sql.SparkSession.builder.master("local").appName("Spark CSV Reader").getOrCreate;
+
+val df = spark.read.format("csv").option("header", "true").load("D:/Task_final/Input_data/yellow_tripdata_2020-01.csv")
+
+// группируем данные по дню, выделяем 5 групп пассажиров (в зависимости от количества), находим количество пассажиров по группам в день 
+val leftDF = df.groupBy(date_trunc("Day",col("tpep_pickup_datetime")).as("date"), when(col("passenger_count").cast("int") === 0, "percentage_zero").when(col("passenger_count").cast("int") === 1, "percentage_1p").when(col("passenger_count").cast("int") === 2, "percentage_2p").when(col("passenger_count").cast("int") === 3, "percentage_3p").otherwise("percentage_4p_plus").alias("new_passenger_group")).count()
+
+// группируем данные по дням, находим общее количество поездок в день
+val rightDF = df.groupBy(date_trunc("Day",col("tpep_pickup_datetime")).as("date")).count()
+
+//объединяем полученные фреймы по дате, находим процент поездок по количеству человек в машине для каждого дня
+val fullDF = leftDF.join(rightDF, leftDF("date") === rightDF("date"), "left").select(rightDF("date"), leftDF("new_passenger_group"), (lit(100)*leftDF("count")/rightDF("count")).as("cnt")).sort("date")
+
+// транспонируем данные к нужному формату (преобразуем строки с группами пассажиров в столбцы)
+val pivotDF = fullDF.groupBy("date").pivot(col("new_passenger_group")).max()
+
+// группируем данные по дню, выделяем 5 групп пассажиров (в зависимости от количества), находим сумму самой дорогой и сумму самой дешевой поездки по группам в день 
+val minMaxDF = df.groupBy(date_trunc("Day",col("tpep_pickup_datetime")).as("date"), when(col("passenger_count").cast("int") === 0, "percentage_zero").when(col("passenger_count").cast("int") === 1, "percentage_1p").when(col("passenger_count").cast("int") === 2, "percentage_2p").when(col("passenger_count").cast("int") === 3, "percentage_3p").otherwise("percentage_4p_plus").alias("new_passenger_group")).agg(max(col("fare_amount").cast("float")).as("max_count_day"), min(col("fare_amount").cast("float")).as("min_count_day"))
+
+// транспонируем данные к нужному формату (преобразуем строки с группами пассажиров в столбцы с суммами самой дорогой и самой дешевой поездкой)
+val pivotMinMaxDF = minMaxDF.groupBy("date").pivot(col("new_passenger_group")).agg(min("min_count_day").alias("min_count_day"),max("max_count_day").alias("max_count_day")).sort("date")
+
+// объединяем фреймы pivotDF и pivotMinMaxDF по дате
+val outputDF = pivotDF.join(pivotMinMaxDF, pivotDF("date") === pivotMinMaxDF("date"), "left").select(pivotDF("date"), pivotDF("percentage_zero"), pivotMinMaxDF("percentage_zero_min_count_day"), pivotMinMaxDF("percentage_zero_max_count_day"), pivotDF("percentage_1p"), pivotMinMaxDF("percentage_1p_min_count_day"), pivotMinMaxDF("percentage_1p_max_count_day"), pivotDF("percentage_2p"), pivotMinMaxDF("percentage_2p_min_count_day"), pivotMinMaxDF("percentage_2p_max_count_day"), pivotDF("percentage_3p"), pivotMinMaxDF("percentage_3p_min_count_day"), pivotMinMaxDF("percentage_3p_max_count_day"), pivotDF("percentage_4p_plus"), pivotMinMaxDF("percentage_4p_plus_min_count_day"), pivotMinMaxDF("percentage_4p_plus_max_count_day")).sort("date")
+
+// записываем полученную таблицу в parquet
+outputDF.toDF().write.parquet("D:/Task_final/Output_data/tripdata_output_2.parquet")

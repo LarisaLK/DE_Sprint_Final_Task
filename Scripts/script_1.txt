@@ -1,0 +1,18 @@
+val spark = org.apache.spark.sql.SparkSession.builder.master("local").appName("Spark CSV Reader").getOrCreate;
+
+val df = spark.read.format("csv").option("header", "true").load("D:/Task_final/Input_data/yellow_tripdata_2020-01.csv")
+
+// группируем данные по дню, выделяем 5 групп пассажиров (в зависимости от количества), находим количество пассажиров, сумму самой дорогой и сумму самой дешевой поездки по группам в день 
+val leftDF = df.groupBy(date_trunc("Day",col("tpep_pickup_datetime")).as("date"), when(col("passenger_count").cast("int") === 0, "percentage_zero").when(col("passenger_count").cast("int") === 1, "percentage_1p").when(col("passenger_count").cast("int") === 2, "percentage_2p").when(col("passenger_count").cast("int") === 3, "percentage_3p").otherwise("percentage_4p_plus").alias("new_passenger_group")).agg(count("passenger_count").as("count_day_group"), max(col("fare_amount").cast("float")).as("max_count_day"), min(col("fare_amount").cast("float")).as("min_count_day"))
+
+// группируем данные по дням, находим общее количество поездок в день
+val rightDF = df.groupBy(date_trunc("Day",col("tpep_pickup_datetime")).as("date")).count()
+
+// объединяем полученные фреймы по дате, находим процент поездок по количеству человек в машине для каждого дня
+val fullDF = leftDF.join(rightDF, leftDF("date") === rightDF("date"), "left").select(rightDF("date"), leftDF("new_passenger_group"), (lit(100)*leftDF("count_day_group")/rightDF("count")).as("cnt"), leftDF("min_count_day"), leftDF("max_count_day")).sort("date")
+
+// транспонируем данные к нужному формату (преобразуем строки с группами пассажиров в столбцы, добавляем столбцы с суммами самой дорогой и самой дешевой поездкой для каждой группы)
+val pivotDF = fullDF.groupBy("date").pivot(col("new_passenger_group")).agg(max("cnt").alias("cnt"),min("min_count_day").alias("min_count_day"),max("max_count_day").alias("max_count_day")).sort("date")
+
+// записываем полученную таблицу в parquet
+pivotDF.toDF().write.parquet("D:/Task_final/Output_data/tripdata_output_1.parquet")
