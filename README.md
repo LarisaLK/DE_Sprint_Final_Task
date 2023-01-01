@@ -3,47 +3,55 @@
   
   
 1) Структура проекта:  
-	- директория с исходными данными (Input_data);  
 	- директория с выходными данными (Output_data);  
+	- директория с презентацией (Presentation);  
+	- директория со скриншотами и графиками (Screenshots);  
 	- директория со скриптами (Scripts).  
   
 Task_final  
-├── Input_data  
-│	└── yellow_tripdata_2020-01.csv  
-│  
 ├── Output_data  
 │    ├── tripdata_output_1.parquet  
 │    └── tripdata_output_2.parquet  
 │  
+├── Presentation  
+│    └── presentation_final_task.pptx  
+│  
+├── Screenshots  
+│    ├── 1 dataMart_1_variant1.png  
+│    ├── 2 dataMart_2_variant1.png  
+│    ├── 3 dataMart_1_variant2.png  
+│    ├── 4 dataMart_2_variant2.png  
+│    ├── 5 graphic_passengerCount_tipAmount.png  
+│    └── 6 graphic_groupsDistance_tipAmount.png  
+│  
 ├── Scripts  
+│    ├── data_analysis_graphics.ipynb  
+│    ├── final_task_ver1.ipynb  
+│    ├── final_task_ver2.ipynb  
 │    ├── script_1.txt  
-│    ├── script_2.txt  
-│    └── data_analysis_graphics.ipynb  
+│    └── script_2.txt  
 │  
 └── README.md  
   
   
 2) Описание исходных данных:  
-|Поле      		    |Описание			  								  |  
-+---------------------+---------------------------------------------------------------------------+  
-|VendorId	 	    |ИД компании			    				 		              |  
-|tpep_pickup_datetime |Время и дата, когда пассажир сел в такси	   				        |  
-|tpep_dropoff_datetime|Время и дата, когда пассажир вышел из такси  				        |                         
-|passanger_count	    |Количество пассажиров      								  |  
-|trip_distance	    |Пройденное расстояние                 					        |  
-|ratecodeid		    |Код скорости                 								  |  
-|store_and_fwd_flag   |Флаг, отвечающий за сохранение записи поездки перед ее отправкой поставщику|  
-|pulocationId	    |Широта, где была начата поездка					              |  
-|dolocationid	    |Долгота, где была начата поездка						        |  
-|payment_type	    |Тип оплаты									              |  
-|fare_amount	    |Стоимость поездки										  |  
-|mta_tax		    |Комиссия автопарка										  |  
-|tip_amount		    |Чаевые												  |  
-|tools_amount	    |Оплата за платные дороги									  |  
-|improvement_surchange|Доплата за страховку									  |  
-|total_amount	    |Полная стоимость поездки									  |  
-|congestion_surchange |Дополнительный сбор 									  |  
-+---------------------+---------------------------------------------------------------------------+  
+VendorId - ИД компании  
+tpep_pickup_datetime - Время и дата, когда пассажир сел в такси  
+tpep_dropoff_datetime - Время и дата, когда пассажир вышел из такси  
+passanger_count - Количество пассажиров  
+trip_distance - Пройденное расстояние  
+ratecodeid - Код скорости  
+store_and_fwd_flag - Флаг, отвечающий за сохранение записи поездки перед ее отправкой поставщику  
+pulocationId - Широта, где была начата поездка  
+dolocationid - Долгота, где была начата поездка  
+payment_type - Тип оплаты  
+fare_amount - Стоимость поездки  
+mta_tax - Комиссия автопарка  
+tip_amount - Чаевые  
+tools_amount - Оплата за платные дороги  
+improvement_surchange - Доплата за страховку  
+total_amount - Полная стоимость поездки  
+congestion_surchange - Дополнительный сбор  
 Источник: https://disk.yandex.ru/d/DKeoopbGH1Ttuw  
   
   
@@ -55,14 +63,14 @@ Task_final
   
   
 4) Выполнение работы:  
-	4.1) Файл script_1.txt содержит команды Spark Scala для решения основной задачи.  
+	4.1) Файлы final_task_ver1.ipynb и script_1.txt содержат решения основной задачи (Spark, Scala).  
 		Идея:  
 		  - отдельно сгруппировать данные по дате в зависимости от 5 групп пассажиров (по количеству), найти для каждой группы количество поездок, сумму самой дорогой и сумму самой дешевой поездок в рассматриваемый день;  
 		  - отдельно сгруппировать данные по дате, найти общее количество поездок в день;  
 		  - объединить полученные наборы по дате, найти процент поездок по количеству человек в машине для каждого рассматриваемого дня;  
 		  - транспонировать таблицу (преобразовать строки с группами пассажиров в столбцы, добавить столбцы с суммами самой дорогой и самой дешевой поездкой для каждой выделенной группы пассажиров).  
 	
-	4.2) Файл script_2.txt содержит команды Spark Scala для решения основной задачи.  
+	4.2) Файлы final_task_ver2.ipynb и script_2.txt содержат решения основной задачи (Spark, Scala).  
 		Идея:  
 		  - отдельно сгруппировать данные по дате в зависимости от 5 групп пассажиров (по количеству), найти для каждой группы количество поездок в рассматриваемый день;  
 		  - отдельно сгруппировать данные по дате, найти общее количество поездок в день;  
@@ -79,5 +87,8 @@ Task_final
   
   
 5) Выходные данные основного задания (таблица (parquet)) расположены в директории Output_data:  
-	- tripdata_output_1.parquet соответствует файлу script_1.txt;  
-	- tripdata_output_2.parquet соответствует файлу script_2.txt.
+	- tripdata_output_1.parquet соответствует файлу script_1.txt/final_task_ver1.ipynb;  
+	- tripdata_output_2.parquet соответствует файлу script_2.txt/final_task_ver2.ipynb.  
+  
+  
+6) Презентация расположена в директории Presentation, скриншоты и полученные графики расположены в директории Screenshots.
